@@ -93,8 +93,7 @@ TEMPLATE_LICENSE = """
 ##############################################################################
 """
 
-TEMPLATE_INIT_PY = """
-# -*- coding: utf-8 -*-
+TEMPLATE_INIT_PY = """# -*- coding: utf-8 -*-
 {{license}}
 
 
@@ -102,8 +101,7 @@ TEMPLATE_INIT_PY = """
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 """
 
-TEMPLATE_OPENERP_PY = """
-# -*- coding: utf-8 -*-
+TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 {{license}}
 
 
