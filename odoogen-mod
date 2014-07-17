@@ -1,0 +1,137 @@
+#! /usr/bin/env python
+
+"""Odoo Module Generator
+
+Copyright (C) 2014 Nicholas Booker <NMBooker@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import sys
+import argparse
+import os.path
+import datetime
+
+import jinja2
+
+def die(errno, errmsg):
+    sys.stderr.write(errmsg + '\n')
+    sys.exit(errno)
+
+def main(options):
+    """Main program."""
+    name = options.name
+    if os.path.exists(name):
+        die(3, 'Directory %s already exists' % name)
+    ctx = {'name': name, 'repr': repr}
+    ctx['fullname'] = raw_input('Full name: ').rstrip()
+    ctx['summary'] = raw_input('Summary: ').rstrip()
+    ctx['author'] = raw_input('Author: ').rstrip()
+    ctx['website'] = raw_input('Website: ').rstrip()
+    ctx['today'] = datetime.date.today()
+
+    ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
+
+    os.mkdir(name)
+
+    openerp_py_path = os.path.join(name, '__openerp__.py')
+    renderfile(openerp_py_path, TEMPLATE_OPENERP_PY, ctx)
+
+    init_py_path = os.path.join(name, '__init__.py')
+    renderfile(init_py_path, TEMPLATE_INIT_PY, ctx)
+    return
+
+def writefile(path, string):
+    with open(path, 'w') as thefile:
+        thefile.write(string)
+
+def renderfile(path, template_str, ctx):
+    rendered = jinja2.Template(template_str).render(**ctx)
+    writefile(path, rendered + '\n')
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="Odoo Module Generator",
+    )
+    # parser.add_argument() calls here
+    parser.add_argument('name', help='name of odoo module to generate')
+    options = parser.parse_args()
+    # extra processing of options here
+    return options
+
+TEMPLATE_LICENSE = """
+##############################################################################
+#
+# {{name}}
+# Copyright (C) {{today.strftime('%Y')}} {{author}} (<{{website}}>)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+"""
+
+TEMPLATE_INIT_PY = """
+# -*- coding: utf-8 -*-
+{{license}}
+
+
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+"""
+
+TEMPLATE_OPENERP_PY = """
+# -*- coding: utf-8 -*-
+{{license}}
+
+
+{
+    'name': {{repr(name)}},
+    'version': '0.1',
+    'author': {{repr(author)}},
+    'website': {{repr(website)}},
+    'summary': {{repr(summary)}},
+    'description': \"\"\"
+\"\"\",
+    'images': [
+    ],
+    'depends': [
+    ],
+    'data': [
+    ],
+    'demo': [
+    ],
+    'test': [
+    ],
+    'installable': True,
+    'auto_install': False,
+
+}
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+"""
+
+if __name__ == "__main__":
+    main(get_options())
