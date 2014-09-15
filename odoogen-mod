@@ -23,12 +23,10 @@ import argparse
 import os.path
 import datetime
 
+from templates import TEMPLATE_LICENSE, renderfile
+from common import die
 import jinja2
 
-def die(errno, errmsg):
-    """Display errmsg on stderr and exit script with errno."""
-    sys.stderr.write(errmsg + '\n')
-    sys.exit(errno)
 
 def main(options):
     """Main program."""
@@ -53,48 +51,15 @@ def main(options):
     renderfile(init_py_path, TEMPLATE_INIT_PY, ctx)
     return
 
-def writefile(path, string):
-    """Create or empty file with path, and write string to it."""
-    with open(path, 'w') as thefile:
-        thefile.write(string)
-
-def renderfile(path, template_str, ctx):
-    """Create or overwrite file with template rendered with ctx."""
-    rendered = jinja2.Template(template_str).render(**ctx)
-    writefile(path, rendered + '\n')
 
 def get_options():
     """Get options for the script."""
     parser = argparse.ArgumentParser(
         description="Odoo Module Generator",
     )
-    # parser.add_argument() calls here
     parser.add_argument('name', help='name of odoo module to generate')
     options = parser.parse_args()
-    # extra processing of options here
     return options
-
-TEMPLATE_LICENSE = """
-##############################################################################
-#
-# {{fullname}}
-# Copyright (C) {{today.strftime('%Y')}} {{author}} (<{{website}}>)
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
-"""
 
 TEMPLATE_INIT_PY = """# -*- coding: utf-8 -*-
 {{license}}
@@ -103,6 +68,7 @@ TEMPLATE_INIT_PY = """# -*- coding: utf-8 -*-
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 """
+
 
 TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 {{license}}
