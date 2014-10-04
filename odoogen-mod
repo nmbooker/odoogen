@@ -34,11 +34,11 @@ def main(options):
     if os.path.exists(name):
         die(3, 'Directory %s already exists' % name)
     ctx = {'name': name, 'repr': repr}
-    ctx['fullname'] = raw_input('Full name: ').rstrip()
-    ctx['summary'] = raw_input('Summary: ').rstrip()
-    ctx['author'] = raw_input('Author: ').rstrip()
-    ctx['website'] = raw_input('Website: ').rstrip()
-    ctx['category'] = raw_input('Category [Extras]): ').strip() or None
+    ctx['fullname'] = options.fullname or raw_input('Full name: ').rstrip()
+    ctx['summary'] = options.summary or raw_input('Summary: ').rstrip()
+    ctx['author'] = options.author or raw_input('Author: ').rstrip()
+    ctx['website'] = options.website or raw_input('Website: ').rstrip()
+    ctx['category'] = options.category or raw_input('Category [Extras]): ').strip() or None
     ctx['today'] = datetime.date.today()
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
@@ -59,6 +59,11 @@ def get_options():
         description="Odoo Module Generator",
     )
     parser.add_argument('name', help='name of odoo module to generate')
+    parser.add_argument('--author', '-a', default=None, help='Author name')
+    parser.add_argument('--fullname', '-f', default=None, help='Full name')
+    parser.add_argument('--summary', '-s', default=None, help='Summary')
+    parser.add_argument('--website', '-w', default=None, help='Website URL')
+    parser.add_argument('--category', '-c', default=None, help='Category')
     options = parser.parse_args()
     return options
 
