@@ -1,0 +1,49 @@
+#! /usr/bin/env python
+
+"""Generate a basic XML file for Odoo data.
+"""
+
+import sys
+import argparse
+import os
+
+import common
+
+
+def main(options):
+    """Main program."""
+    filename = options.filename
+    outfile = sys.stdout
+    if filename:
+        if os.path.exists(filename):
+            common.die(3, 'File %s already exists' % filename)
+        else:
+            outfile = open(filename, 'w') if filename else sys.stdout
+    outfile.write(XML)
+    return
+
+XML = """<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+    </data>
+</openerp>
+"""
+
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="Create basic XML file for Odoo data.",
+    )
+    parser.add_argument(
+        'filename',
+        nargs='?',
+        default=None,
+        help='name of XML file to create',
+    )
+    options = parser.parse_args()
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
