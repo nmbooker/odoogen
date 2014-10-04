@@ -1,0 +1,62 @@
+#! /usr/bin/env python
+
+"""Generate form block.
+"""
+
+import sys
+import argparse
+
+import jinja2
+
+
+def main(options):
+    """Main program."""
+    sys.stdout.write(xmlblock(options))
+    return
+
+
+def xmlblock(options):
+    orig_id = options.orig_id
+    new_id = orig_id.split('.')[1]
+    context = dict(
+        id=new_id,
+        name="%s.inherit" % options.orig_name,
+        inherit_id=orig_id,
+        model=options.model,
+    )
+    return jinja2.Template(XML_TEMPLATE).render(**context)
+
+
+XML_TEMPLATE = """
+        <record id="{{id}}" model="ir.ui.view">
+            <field name="name">{{name}}</field>
+            <field name="model">{{model}}</field>
+            <field name="inherit_id" ref="{{inherit_id}}"/>
+            <field name="arch" type="xml">
+                <!--
+                <field name="TODO" position="after">
+                </field>
+                -->
+                <!--
+                <xpath expr="TODO" position="after">
+                </xpath>
+                -->
+            </field>
+        </record>
+
+"""
+
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="field names on STDIN, XML tags on STDOUT",
+    )
+    parser.add_argument('model', help='model name')
+    parser.add_argument('--orig-id', '-I', required=True, help='e.g. sale.sale_order_form_view')
+    parser.add_argument('--orig-name', '-N', required=True, help='original name, e.g. sale.order.form')
+    options = parser.parse_args()
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
