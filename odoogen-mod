@@ -38,6 +38,7 @@ def main(options):
     ctx['summary'] = raw_input('Summary: ').rstrip()
     ctx['author'] = raw_input('Author: ').rstrip()
     ctx['website'] = raw_input('Website: ').rstrip()
+    ctx['category'] = raw_input('Category [Extras]): ').strip() or None
     ctx['today'] = datetime.date.today()
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
@@ -80,6 +81,9 @@ TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
     'author': {{repr(author)}},
     'website': {{repr(website)}},
     'summary': {{repr(summary)}},
+    {% if category %}
+    'category': {{repr(category)}},
+    {% endif %}
     'description': \"\"\"{{summary}},
 \"\"\",
     'images': [
