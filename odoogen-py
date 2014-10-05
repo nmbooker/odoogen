@@ -24,6 +24,7 @@ def main(options):
     context = context_from_odoo_data(odoo_data, datetime.date.today())
     license = jinja2.Template(TEMPLATE_LICENSE).render(**context)
     renderfile(filename, TEMPLATE_PY_FILE, {'license': license})
+    sys.stdout.write('from . import %s\n' % (name,))
     return
 
 def context_from_odoo_data(odoo_data, today):
