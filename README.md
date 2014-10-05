@@ -48,7 +48,7 @@ Now open your new module, for example in a new tab:
 
 Create a new XML file with the right tags down to `<data>`
 
-You can run this from your shell, or from `:!` in Odoo.
+You can run this from your shell, or from `:!` in VIM.
 
 It just takes the name of the file, e.g.
 
