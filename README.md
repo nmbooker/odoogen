@@ -22,6 +22,8 @@ Takes the target module name (i.e. without the `.py`) on command line.
 Key data for the copyright section is taken from the `__openerp__.py` 
 in the present working directory (no need to enter all that stuff again).
 
+An import line suitable for `__init__.py` is output on STDOUT.
+
 # odoogen-xmlfile
 
 Create a new XML file with the right tags down to `<data>`
