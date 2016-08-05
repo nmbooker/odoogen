@@ -23,8 +23,14 @@ def main(options):
     odoo_data = read_openerp_py(options)
     context = context_from_odoo_data(odoo_data, datetime.date.today())
     license = jinja2.Template(TEMPLATE_LICENSE).render(**context)
-    renderfile(filename, TEMPLATE_PY_FILE, {'license': license})
-    sys.stdout.write('from . import %s\n' % (name,))
+    py_context = {
+        'license': license,
+        'import_line': (
+            'from openerp.osv import osv, fields' if options.v7
+            else 'from openerp import models, fields, api'
+        )
+    }
+    renderfile(filename, TEMPLATE_PY_FILE, py_context)
     return
 
 def context_from_odoo_data(odoo_data, today):
@@ -49,7 +55,7 @@ def read_openerp_py(options):
 TEMPLATE_PY_FILE = """# -*- coding: utf-8 -*-
 {{license}}
 
-from openerp import models, fields, api
+{{import_line}}
 
 
 
@@ -62,6 +68,7 @@ def get_options():
         description="DESCRIPTION",
     )
     parser.add_argument('name', help='name of Python module to generate')
+    parser.add_argument('--v7', action='store_true', help='Generate v7 style module')
     options = parser.parse_args()
     return options
 
