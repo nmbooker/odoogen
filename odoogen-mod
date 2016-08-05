@@ -22,6 +22,8 @@ import sys
 import argparse
 import os.path
 import datetime
+from funbox.maybe import maybe
+from operator import methodcaller
 
 from templates import TEMPLATE_LICENSE, renderfile
 from common import die
@@ -39,6 +41,7 @@ def main(options):
     ctx['author'] = options.author or raw_input('Author: ').rstrip()
     ctx['website'] = options.website or raw_input('Website: ').rstrip()
     ctx['category'] = options.category or raw_input('Category [Extras]): ').strip() or None
+    ctx['depends'] = maybe(options.depends, methodcaller('split', ',')) or []
     ctx['today'] = datetime.date.today()
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
@@ -68,6 +71,7 @@ def get_options():
     parser.add_argument('--summary', '-s', default=None, help='Summary')
     parser.add_argument('--website', '-w', default=None, help='Website URL')
     parser.add_argument('--category', '-c', default=None, help='Category')
+    parser.add_argument('--depends', '-D', default=None, help='Dependencies e.g. -D account,sale')
     options = parser.parse_args()
     return options
 
@@ -104,7 +108,8 @@ TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 \"\"\",
     'images': [
     ],
-    'depends': [
+    'depends': [{% for mod in depends %}
+        '{{mod}}',{% endfor %}
     ],
     'data': [
     ],
