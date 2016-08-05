@@ -50,6 +50,10 @@ def main(options):
 
     init_py_path = os.path.join(name, '__init__.py')
     renderfile(init_py_path, TEMPLATE_INIT_PY, ctx)
+    os.mkdir(os.path.join(name, 'models'))
+    renderfile(os.path.join(name, 'models', '__init__.py'), TEMPLATE_MODELS_INIT_PY, ctx)
+    os.mkdir(os.path.join(name, 'views'))
+    os.mkdir(os.path.join(name, 'security'))
     return
 
 
@@ -70,11 +74,18 @@ def get_options():
 TEMPLATE_INIT_PY = """# -*- coding: utf-8 -*-
 {{license}}
 
-
+from . import models
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 """
 
+TEMPLATE_MODELS_INIT_PY = """# -*- coding: utf-8 -*-
+{{license}}
+
+# from . import 
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+"""
 
 TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 {{license}}
