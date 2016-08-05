@@ -17,7 +17,7 @@ from templates import renderfile, TEMPLATE_LICENSE
 def main(options):
     """Main program."""
     name = options.name
-    filename = "%s.py" % name
+    filename = name if name.endswith('.py') else name+'.py'
     if os.path.exists(filename):
         die(3, 'File %s already exists' % filename)
     odoo_data = read_openerp_py(options)
