@@ -1,0 +1,31 @@
+#! /usr/bin/env python2
+
+"""DESCRIPTION
+"""
+
+import sys
+import argparse
+import csv
+import os.path
+
+def main(options):
+    """Main program."""
+    filename = os.path.join(options.output_directory, 'ir.model.access.csv')
+    with open(filename, 'wb') as outfile:
+        csvfile = csv.writer(csvfile)
+        csvfile.writerow(['id', 'name', 'model_id:id', 'group_id:id', 'perm_read', 'perm_write', 'perm_create', 'perm_unlink'])
+    return
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="generate a template ir.model.access.csv in the standard place",
+    )
+    # parser.add_argument() calls here
+    parser.add_argument("--output-directory", "-d", default="security", help="target directory")
+    options = parser.parse_args()
+    # extra processing of options here
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
