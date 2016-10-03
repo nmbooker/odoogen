@@ -12,7 +12,7 @@ def main(options):
     """Main program."""
     filename = os.path.join(options.output_directory, 'ir.model.access.csv')
     with open(filename, 'wb') as outfile:
-        csvfile = csv.writer(csvfile)
+        csvfile = csv.writer(outfile)
         csvfile.writerow(['id', 'name', 'model_id:id', 'group_id:id', 'perm_read', 'perm_write', 'perm_create', 'perm_unlink'])
     return
 
