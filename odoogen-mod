@@ -2,7 +2,7 @@
 
 """Odoo Module Generator
 
-Copyright (C) 2014 Nicholas Booker <NMBooker@gmail.com>
+Copyright (C) 2016 Nicholas Booker <NMBooker@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -28,6 +28,7 @@ from operator import methodcaller
 from templates import TEMPLATE_LICENSE, renderfile
 from common import die
 import jinja2
+import subprocess
 
 
 def main(options):
@@ -45,20 +46,25 @@ def main(options):
     ctx['auto_install'] = repr(options.auto_install)
     sys.stderr.write(repr(ctx['depends']) + '\n')
     ctx['today'] = datetime.date.today()
+    ctx['models'] = models = options.models.split(',') if options.models else []
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
 
     os.mkdir(name)
+    os.chdir(name)
 
-    openerp_py_path = os.path.join(name, '__openerp__.py')
+    openerp_py_path = '__openerp__.py'
     renderfile(openerp_py_path, TEMPLATE_OPENERP_PY, ctx)
+    os.mkdir('models')
 
-    init_py_path = os.path.join(name, '__init__.py')
+    for model in models:
+        subprocess.call(['odoogen-py', os.path.join('models', model+'.py')])
+
+    init_py_path = '__init__.py'
     renderfile(init_py_path, TEMPLATE_INIT_PY, ctx)
-    os.mkdir(os.path.join(name, 'models'))
-    renderfile(os.path.join(name, 'models', '__init__.py'), TEMPLATE_MODELS_INIT_PY, ctx)
     os.mkdir(os.path.join(name, 'views'))
     os.mkdir(os.path.join(name, 'security'))
+    renderfile(os.path.join('models', '__init__.py'), TEMPLATE_MODELS_INIT_PY, ctx)
     return
 
 
@@ -75,6 +81,7 @@ def get_options():
     parser.add_argument('--category', '-c', default=None, help='Category')
     parser.add_argument('--depends', '-D', default=None, help='Dependencies e.g. -D account,sale')
     parser.add_argument('--auto-install', '-A', action='store_true', help='set auto_install True')
+    parser.add_argument('--models', '-M', default=None, help='Comma-separated list of models modules to mint, e.g. sale,partner')
     options = parser.parse_args()
     return options
 
@@ -89,7 +96,11 @@ from . import models
 TEMPLATE_MODELS_INIT_PY = """# -*- coding: utf-8 -*-
 {{license}}
 
-# from . import 
+{{'# ' if not models else ''}}from . import (
+{% for model in models %}
+    {{model}},
+{% endfor %}
+{{'# ' if not models else ''}})
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 """
