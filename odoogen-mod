@@ -37,20 +37,22 @@ def main(options):
     if os.path.exists(name):
         die(3, 'Directory %s already exists' % name)
 
-    view_basenames = options.views.split(',') if options.views else []
+    yml = get_yaml_options(options)
+
+    view_basenames = (options.views.split(',') if options.views else []) or yml.get('views', [])
     views = [os.path.join('views', "{}.xml".format(b)) for b in view_basenames]
     ctx = {'name': name, 'repr': repr}
     ctx['datafiles'] = views[:]
-    ctx['fullname'] = options.fullname or raw_input('Full name: ').rstrip()
-    ctx['summary'] = options.summary or raw_input('Summary: ').rstrip()
-    ctx['author'] = options.author or raw_input('Author: ').rstrip()
-    ctx['website'] = options.website or raw_input('Website: ').rstrip()
-    ctx['category'] = options.category or raw_input('Category [Extras]): ').strip() or None
-    ctx['depends'] = maybe(options.depends, methodcaller('split', ',')) or []
-    ctx['auto_install'] = repr(options.auto_install)
+    ctx['fullname'] = options.fullname or yml.get('fullname') or raw_input('Full name: ').rstrip()
+    ctx['summary'] = options.summary or yml.get('summary') or raw_input('Summary: ').rstrip()
+    ctx['author'] = options.author or yml.get('author') or raw_input('Author: ').rstrip()
+    ctx['website'] = options.website or yml.get('website') or raw_input('Website: ').rstrip()
+    ctx['category'] = options.category or yml.get('category') or raw_input('Category [Extras]): ').strip() or None
+    ctx['depends'] = maybe(options.depends, methodcaller('split', ',')) or yml.get('depends') or []
+    ctx['auto_install'] = repr(options.auto_install or yml.get('auto_install', False))
     sys.stderr.write(repr(ctx['depends']) + '\n')
     ctx['today'] = datetime.date.today()
-    ctx['models'] = models = options.models.split(',') if options.models else []
+    ctx['models'] = models = (options.models.split(',') if options.models else []) or yml.get('models', [])
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
 
@@ -73,6 +75,16 @@ def main(options):
     os.mkdir(os.path.join('security'))
     return
 
+def get_yaml_options(options):
+    """Naively use YAML files.  A key in any YAML file overrides the key in previous YAML files."""
+    paths = options.from_files or []
+    if paths:
+        import yaml
+    ymldata = {}
+    for path in paths:
+        with open(path, 'rb') as ymlfile:
+            ymldata.update(yaml.safe_load(ymlfile))
+    return ymldata
 
 def get_options():
     """Get options for the script."""
@@ -80,6 +92,7 @@ def get_options():
         description="Odoo Module Generator",
     )
     parser.add_argument('name', help='name of odoo module to generate')
+    parser.add_argument('--from-file', '-y', action='append', dest='from_files', help='get data from YAML file')
     parser.add_argument('--author', '-a', default=None, help='Author name')
     parser.add_argument('--fullname', '-f', default=None, help='Full name')
     parser.add_argument('--summary', '-s', default=None, help='Summary')
