@@ -2,7 +2,7 @@
 
 """Odoo Module Generator
 
-Copyright (C) 2014 Nicholas Booker <NMBooker@gmail.com>
+Copyright (C) 2016 Nicholas Booker <NMBooker@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -22,10 +22,13 @@ import sys
 import argparse
 import os.path
 import datetime
+from funbox.maybe import maybe
+from operator import methodcaller
 
 from templates import TEMPLATE_LICENSE, renderfile
 from common import die
 import jinja2
+import subprocess
 
 
 def main(options):
@@ -33,23 +36,41 @@ def main(options):
     name = options.name
     if os.path.exists(name):
         die(3, 'Directory %s already exists' % name)
+
+    view_basenames = options.views.split(',') if options.views else []
+    views = [os.path.join('views', "{}.xml".format(b)) for b in view_basenames]
     ctx = {'name': name, 'repr': repr}
+    ctx['datafiles'] = views[:]
     ctx['fullname'] = options.fullname or raw_input('Full name: ').rstrip()
     ctx['summary'] = options.summary or raw_input('Summary: ').rstrip()
     ctx['author'] = options.author or raw_input('Author: ').rstrip()
     ctx['website'] = options.website or raw_input('Website: ').rstrip()
     ctx['category'] = options.category or raw_input('Category [Extras]): ').strip() or None
+    ctx['depends'] = maybe(options.depends, methodcaller('split', ',')) or []
+    ctx['auto_install'] = repr(options.auto_install)
+    sys.stderr.write(repr(ctx['depends']) + '\n')
     ctx['today'] = datetime.date.today()
+    ctx['models'] = models = options.models.split(',') if options.models else []
 
     ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
 
     os.mkdir(name)
+    os.chdir(name)
 
-    openerp_py_path = os.path.join(name, '__openerp__.py')
+    openerp_py_path = '__openerp__.py'
     renderfile(openerp_py_path, TEMPLATE_OPENERP_PY, ctx)
+    os.mkdir('models')
 
-    init_py_path = os.path.join(name, '__init__.py')
+    for model in models:
+        subprocess.call(['odoogen-py', os.path.join('models', model+'.py')])
+
+    init_py_path = '__init__.py'
     renderfile(init_py_path, TEMPLATE_INIT_PY, ctx)
+    renderfile(os.path.join('models', '__init__.py'), TEMPLATE_MODELS_INIT_PY, ctx)
+    os.mkdir(os.path.join('views'))
+    for view in views:
+        renderfile(view, TEMPLATE_XML, ctx)
+    os.mkdir(os.path.join('security'))
     return
 
 
@@ -64,17 +85,32 @@ def get_options():
     parser.add_argument('--summary', '-s', default=None, help='Summary')
     parser.add_argument('--website', '-w', default=None, help='Website URL')
     parser.add_argument('--category', '-c', default=None, help='Category')
+    parser.add_argument('--depends', '-D', default=None, help='Dependencies e.g. -D account,sale')
+    parser.add_argument('--auto-install', '-A', action='store_true', help='set auto_install True')
+    parser.add_argument('--models', '-M', default=None, help='Comma-separated list of models modules to mint, e.g. sale,partner')
+    parser.add_argument('--views', '-V', default=None, help='Comma-separated list of view XML file basenames')
     options = parser.parse_args()
     return options
 
 TEMPLATE_INIT_PY = """# -*- coding: utf-8 -*-
 {{license}}
 
-
+from . import models
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
 """
 
+TEMPLATE_MODELS_INIT_PY = """# -*- coding: utf-8 -*-
+{{license}}
+
+{{'# ' if not models else ''}}from . import (
+{% for model in models %}
+    {{model}},
+{% endfor %}
+{{'# ' if not models else ''}})
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+"""
 
 TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 {{license}}
@@ -93,9 +129,11 @@ TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
 \"\"\",
     'images': [
     ],
-    'depends': [
+    'depends': [{% for mod in depends %}
+        '{{mod}}',{% endfor %}
     ],
-    'data': [
+    'data': [{% for path in datafiles %}
+        '{{path}}',{% endfor %}
     ],
     'demo': [
     ],
@@ -103,11 +141,18 @@ TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
     ],
     'license': 'AGPL-3',
     'installable': True,
-    'auto_install': False,
+    'auto_install': {{auto_install}},
 
 }
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
+"""
+
+TEMPLATE_XML = """<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    </data>
+</openerp>
 """
 
 if __name__ == "__main__":

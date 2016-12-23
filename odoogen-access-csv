@@ -1,0 +1,44 @@
+#! /usr/bin/env python2
+
+"""DESCRIPTION
+"""
+
+import sys
+import argparse
+import csv
+import os.path
+
+headers = {
+    'access': ['id', 'name', 'model_id:id', 'group_id:id', 'perm_read', 'perm_write', 'perm_create', 'perm_unlink'],
+    'rules': ['id', 'name', 'model_id:id', 'groups:id', 'domain_force', 'perm_read', 'perm_write', 'perm_create', 'perm_unlink'],
+}
+
+filenames = {
+    'access': 'ir.model.access.csv',
+    'rules': 'ir.rule.csv',
+}
+
+def main(options):
+    """Main program."""
+    filename = os.path.join(options.output_directory, filenames[options.security_part])
+    if os.path.exists(filename):
+        sys.stderr.write("Error: {} already exists\n".format(filename))
+        sys.exit(3)
+    with open(filename, 'wb') as outfile:
+        csvfile = csv.writer(outfile, lineterminator='\n')
+        csvfile.writerow(headers[options.security_part])
+    return
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="generate a template ir.model.access.csv in the security directory",
+    )
+    parser.add_argument('security_part', choices=['access', 'rules'], help='choose which part of the security to generate')
+    parser.add_argument("--output-directory", "-d", default="security", help="target directory if not security")
+    options = parser.parse_args()
+    # extra processing of options here
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
