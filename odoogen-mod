@@ -78,7 +78,12 @@ def main(options):
 
 def get_yaml_options(options):
     """Naively use YAML files.  A key in any YAML file overrides the key in previous YAML files."""
-    paths = options.from_files or []
+    default_conf_file = '.odoogen.yml'
+    paths = []
+    if options.from_files:
+        paths = options.from_files
+    elif (not options.no_files) and os.path.exists(default_conf_file):
+        paths = [default_conf_file]
     if paths:
         import yaml
     ymldata = {}
@@ -104,6 +109,7 @@ def get_options():
     parser.add_argument('--auto-install', '-A', action='store_true', help='set auto_install True')
     parser.add_argument('--models', '-M', default=None, help='Comma-separated list of models modules to mint, e.g. sale,partner')
     parser.add_argument('--views', '-V', default=None, help='Comma-separated list of view XML file basenames')
+    parser.add_argument('--no-files', action='store_true', help='Skip .odoogen.yml even if other files not specified')
     options = parser.parse_args()
     return options
 
