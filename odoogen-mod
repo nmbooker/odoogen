@@ -25,7 +25,7 @@ import datetime
 from funbox.maybe import maybe
 from operator import methodcaller
 
-from templates import TEMPLATE_LICENSE, renderfile
+from templates import get_license, renderfile
 from common import die
 import jinja2
 import subprocess
@@ -54,7 +54,8 @@ def main(options):
     ctx['today'] = datetime.date.today()
     ctx['models'] = models = (options.models.split(',') if options.models else []) or yml.get('models', [])
 
-    ctx['license'] = jinja2.Template(TEMPLATE_LICENSE).render(**ctx)
+    ctx['license_name'] = options.license or yml.get('license') or 'AGPL-3'
+    ctx['license'] = get_license(ctx)   # This relies on ctx['license_name'] and lots of other stuff so order is important
 
     os.mkdir(name)
     os.chdir(name)
@@ -94,6 +95,7 @@ def get_options():
     parser.add_argument('name', help='name of odoo module to generate')
     parser.add_argument('--from-file', '-y', action='append', dest='from_files', help='get data from YAML file')
     parser.add_argument('--author', '-a', default=None, help='Author name')
+    parser.add_argument('--license', '-l', default=None, help='License (AGPL-3, IPA-Schedule)')
     parser.add_argument('--fullname', '-f', default=None, help='Full name')
     parser.add_argument('--summary', '-s', default=None, help='Summary')
     parser.add_argument('--website', '-w', default=None, help='Website URL')
@@ -152,7 +154,7 @@ TEMPLATE_OPENERP_PY = """# -*- coding: utf-8 -*-
     ],
     'test': [
     ],
-    'license': 'AGPL-3',
+    'license': '{{license_name}}',
     'installable': True,
     'auto_install': {{auto_install}},
 
