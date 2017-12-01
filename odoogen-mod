@@ -29,7 +29,14 @@ from templates import get_license, renderfile
 from common import die
 import jinja2
 import subprocess
+import readline
 
+def rlinput(prompt, prefill=''):
+    readline.set_startup_hook(lambda: readline.insert_text(prefill))
+    try:
+        return raw_input(prompt)
+    finally:
+        readline.set_startup_hook()
 
 def main(options):
     """Main program."""
@@ -42,9 +49,10 @@ def main(options):
     view_basenames = (options.views.split(',') if options.views else []) or yml.get('views', [])
     views = [os.path.join('views', "{}.xml".format(b)) for b in view_basenames]
     ctx = {'name': name, 'repr': repr}
+    default_fn = ' '.join(name.split('_')).title()
     ctx['datafiles'] = views[:]
-    ctx['fullname'] = options.fullname or yml.get('fullname') or raw_input('Full name: ').rstrip()
-    ctx['summary'] = options.summary or yml.get('summary') or raw_input('Summary: ').rstrip()
+    ctx['fullname'] = options.fullname or yml.get('fullname') or rlinput('Full name: ', default_fn).rstrip()
+    ctx['summary'] = options.summary or yml.get('summary') or rlinput('Summary: ', ctx['fullname']).rstrip()
     ctx['author'] = options.author or yml.get('author') or raw_input('Author: ').rstrip()
     ctx['website'] = options.website or yml.get('website') or raw_input('Website: ').rstrip()
     ctx['category'] = options.category or yml.get('category') or raw_input('Category [Extras]): ').strip() or None
