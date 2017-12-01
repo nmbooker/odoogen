@@ -43,7 +43,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """,
     'IPA-Schedule': """
-This software is licensed according to the "IP Assignment Schedule" provided with the development project.
+This software is licensed according to the "IP Assignment Schedule" provided
+with the development project.
 """,
 }
 
