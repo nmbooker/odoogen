@@ -6,6 +6,7 @@
 import sys
 import argparse
 import os
+import subprocess
 
 import common
 
@@ -14,12 +15,18 @@ def main(options):
     """Main program."""
     filename = options.filename
     outfile = sys.stdout
+    editor = os.getenv('VISUAL_BACKGROUND')
     if filename:
         if os.path.exists(filename):
+            if editor:
+                subprocess.check_call([editor, os.path.abspath(filename)])
             common.die(3, 'File %s already exists' % filename)
         else:
             outfile = open(filename, 'w') if filename else sys.stdout
     outfile.write(XML)
+    if filename and editor and os.path.exists(filename):
+        subprocess.check_call([editor, os.path.abspath(filename)])
+
     return
 
 XML = """<?xml version="1.0" encoding="utf-8"?>

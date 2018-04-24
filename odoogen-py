@@ -12,13 +12,17 @@ import jinja2
 
 from common import die
 from templates import renderfile, TEMPLATE_LICENSE
+import subprocess
 
 
 def main(options):
     """Main program."""
     name = options.name
     filename = name if name.endswith('.py') else name+'.py'
+    editor = os.getenv('VISUAL_BACKGROUND')
     if os.path.exists(filename):
+        if editor:
+            subprocess.check_call([editor, os.path.abspath(filename)])
         die(3, 'File %s already exists' % filename)
     odoo_data = read_openerp_py(options)
     context = context_from_odoo_data(odoo_data, datetime.date.today())
@@ -30,7 +34,11 @@ def main(options):
             else 'from openerp import models, fields, api'
         )
     }
-    renderfile(filename, TEMPLATE_PY_FILE, py_context)
+    try:
+        renderfile(filename, TEMPLATE_PY_FILE, py_context)
+    finally:
+        if editor and os.path.exists(filename):
+            subprocess.check_call([editor, os.path.abspath(filename)])
     return
 
 def context_from_odoo_data(odoo_data, today):
