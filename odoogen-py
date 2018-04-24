@@ -11,7 +11,7 @@ import datetime
 import jinja2
 
 from common import die
-from templates import renderfile, TEMPLATE_LICENSE
+from templates import renderfile, get_license
 import subprocess
 
 
@@ -26,7 +26,7 @@ def main(options):
         die(3, 'File %s already exists' % filename)
     odoo_data = read_openerp_py(options)
     context = context_from_odoo_data(odoo_data, datetime.date.today())
-    license = jinja2.Template(TEMPLATE_LICENSE).render(**context)
+    license = get_license(context)
     py_context = {
         'license': license,
         'import_line': (
@@ -45,6 +45,7 @@ def context_from_odoo_data(odoo_data, today):
     """Take data from __openerp__.py, return context for templates.
     """
     return {
+        'license_name': odoo_data['license'],
         'website': odoo_data['website'],
         'fullname': odoo_data['name'],
         'author': odoo_data['author'],
