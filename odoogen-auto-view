@@ -1,0 +1,94 @@
+#! /usr/bin/env python2
+
+"""DESCRIPTION
+"""
+
+import sys
+import argparse
+from oekit.oe_client_env import OEClientEnv
+import jinja2
+
+def main(options):
+    """Main program."""
+    oe = OEClientEnv().get_erppeek_client()
+    view_type = options.view_type
+    xmlid = options.model.replace('.', '_') + '_' + view_type
+    fields = oe.model(options.model).fields_get()
+
+    # Get rid of stuff we don't usually display
+    for i in 'id __last_update write_date create_date write_uid create_uid display_name'.split():
+        del fields[i]
+
+    # Special case: Handle state field separately in form view
+    state_field = fields.pop('state', None) if view_type == 'form' else fields.get('state')
+
+    data = dict(fields=fields, xmlid=xmlid, model=options.model, view_type=view_type, state_field=state_field)
+    arch = jinja2.Template(ARCH_TEMPLATES[view_type]).render(**data).rstrip()
+    data['arch'] = arch
+    xml = jinja2.Template(FIELDS_ONLY_TEMPLATE if options.fields_only else XML_TEMPLATE).render(**data)
+    sys.stdout.write(xml)
+    return
+
+FIELDS_ONLY_TEMPLATE = r"""
+{%- for f in fields -%}
+<field name="{{f}}"/>
+{% endfor %}
+"""
+
+ARCH_TEMPLATES = {
+    'form': r"""
+        <header>
+            {% if state_field %}
+                <field name="state" widget="statusbar"
+                       statusbar_visible="{{ state_field['selection'] | map('first') | join(',') }}"/>
+            {% endif %}
+        </header>
+        <sheet>
+            <group>
+                <group>
+                    {% for f in fields -%}
+                        <field name="{{f}}"/>
+                    {% endfor %}
+                </group>
+            </group>
+        </sheet>
+    """,
+    'tree': r"""
+        <tree>
+            {% for f in fields -%}
+                <field name="{{f}}"/>
+            {% endfor %}
+        </tree>
+    """,
+    'search': r"""
+        <search>
+        </search>
+    """
+}
+
+XML_TEMPLATE = r"""
+<record model="ir.ui.view" id="{{xmlid}}">
+    <field name="name">{{model}}.{{view_type}}</field>
+    <field name="model">{{model}}</field>
+    <field name="type">{{view_type}}</field>
+    <field name="arch" type="xml">
+        {{- arch }}
+    </field>
+</record>
+"""
+
+def get_options():
+    """Get options for the script."""
+    parser = argparse.ArgumentParser(
+        description="DESCRIPTION",
+    )
+    parser.add_argument('model')
+    parser.add_argument('--fields-only', action='store_true')
+    parser.add_argument('--type', '-t', dest='view_type', default='form', choices=ARCH_TEMPLATES.keys())
+
+    options = parser.parse_args()
+    # extra processing of options here
+    return options
+
+if __name__ == "__main__":
+    main(get_options())
